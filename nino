@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Author: Seth Brown
-Date: 17 Dec 2012
-Description: Weather forecast
-"""
+
 import sys
 import textwrap
 import json
 import urllib2
+import argparse
 
 def weather(dat, day_idx, metric=False):
     """Assemble weather data
@@ -40,18 +37,24 @@ def cli_format(d, metric=False):
 def main():
     """Output weather data
     """
+
+    parser = argparse.ArgumentParser(description='weather forecast tool')
+    parser.add_argument("-k", help="required api key used to query wunderground api", required=True, action='store', dest='wunderground_key')
+    parser.add_argument("-z", help="required zip for weather data", type=int, required=True, action='store', dest='zip_code')
+    parser.add_argument("-c", help="optional; use celsius", required=False, action='store_true', default=False, dest='celsius')
+    args = parser.parse_args()
+    metric = args.celsius
+
     wunder_data = {'base_url': 'http://api.wunderground.com/api/',
-                   'key': sys.argv[1],
+                   'key': args.wunderground_key,
                    'query': '/conditions/forecast10day/q/',
-                   'zip': sys.argv[2]}
-    try:
-        metric = True if sys.argv[3] == '-c' else False
-    except IndexError:
-        metric = False
+                   'zip': args.zip_code}
+
     url = '{base_url}{key}{query}{zip}.json'.format(**wunder_data)
     r = json.load(urllib2.urlopen(url))
     location = r['current_observation']['display_location']['full']
     print '\n{0}\n'.format(location)
+
     times = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     for time in times:
         weather_data = weather(r, time, metric)
